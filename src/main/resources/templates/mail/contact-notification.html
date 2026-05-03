@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Arte Isis</title>
+</head>
+<body style="margin:0;padding:0;background-color:#e8eef3;">
+  <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background:linear-gradient(180deg,#dce6ee 0%,#e8eef3 48%,#f4f7fa 100%);padding:32px 16px 40px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="max-width:580px;border-radius:20px;overflow:hidden;box-shadow:0 12px 40px rgba(59,107,138,0.12);border:1px solid #d4dee6;">
+          <tr>
+            <td style="background-color:#0d1117;background:linear-gradient(145deg,#0d1117 0%,#1a2332 50%,#152238 100%);padding:28px 24px 28px;text-align:center;border-bottom:3px solid #db7077;">
+              <img th:if="${hasLogo}" src="cid:arteisisLogo" width="220" alt="Arte Isis" style="display:block;margin:0 auto;max-width:220px;height:auto;border:0;outline:none;text-decoration:none;"/>
+              <div th:unless="${hasLogo}" style="font-family:Georgia,'Times New Roman',serif;font-size:22px;font-weight:700;letter-spacing:0.12em;color:#cbd5e1;">
+                <span style="color:#7eb8d4;">ARTE</span> <span style="color:#db7077;">ISIS</span>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:32px 36px 28px;background-color:#ffffff;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#2a2a2a;">
+              <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-radius:14px;overflow:hidden;border:1px solid #e2e8f0;">
+                <tr>
+                  <td colspan="2" style="background:linear-gradient(90deg,#3b6b8a 0%,#4a7a9a 100%);padding:12px 18px;font-size:13px;font-weight:700;letter-spacing:0.04em;color:#ffffff;">Dados do contato</td>
+                </tr>
+                <tr>
+                  <td style="padding:14px 16px;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:13px;width:108px;vertical-align:top;">Nome</td>
+                  <td style="padding:14px 16px;border-bottom:1px solid #f1f5f9;font-size:14px;font-weight:600;color:#1e293b;" th:text="${contactName}">—</td>
+                </tr>
+                <tr>
+                  <td style="padding:14px 16px;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:13px;vertical-align:top;">E-mail</td>
+                  <td style="padding:14px 16px;border-bottom:1px solid #f1f5f9;font-size:14px;">
+                    <a th:href="|mailto:${contactEmail}|" th:text="${contactEmail}" style="color:#3b6b8a;text-decoration:none;font-weight:600;">—</a>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:14px 16px;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:13px;vertical-align:top;">Assunto</td>
+                  <td style="padding:14px 16px;border-bottom:1px solid #f1f5f9;font-size:14px;">
+                    <span style="font-weight:600;color:#1e293b;" th:text="${subjectLabel}">—</span>
+                    <span style="color:#94a3b8;font-size:12px;margin-left:6px;">(<span th:text="${subjectCode}">—</span>)</span>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin:26px 0 10px;font-size:11px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#94a3b8;font-family:'Segoe UI',Roboto,sans-serif;">Mensagem</p>
+              <div style="background:linear-gradient(180deg,#f8fafc 0%,#f1f5f9 100%);border-radius:14px;padding:18px 20px;border:1px solid #e2e8f0;border-left:4px solid #db7077;white-space:pre-wrap;font-size:14px;line-height:1.6;color:#334155;" th:text="${messageBody}">—</div>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
