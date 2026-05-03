@@ -1,4 +1,5 @@
 /target
+/data/uploads
 **/application-local.properties
 /.idea
 *.iml

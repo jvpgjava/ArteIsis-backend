@@ -10,7 +10,7 @@ public record ContactRequest(
         @NotBlank @Email @Size(max = 255) String email,
         @NotBlank
                 @Pattern(
-                        regexp = "uniformes|camisetas|parcerias|outros",
+                        regexp = "uniformes|camisetas|estampas|parcerias|outros",
                         message = "assunto inválido")
                 String subject,
         @NotBlank @Size(max = 4000) String message) {}

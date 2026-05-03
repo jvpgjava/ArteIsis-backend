@@ -76,8 +76,9 @@ public class ContactMailService {
 
     private static String subjectLabel(String code) {
         return switch (code) {
-            case "uniformes" -> "Orçamento para Uniformes";
-            case "camisetas" -> "Pedido de Camisetas Personalizadas";
+            case "uniformes" -> "Orçamento";
+            case "camisetas" -> "Pedido de Camisetas, Moletons ou Uniformes personalizados";
+            case "estampas" -> "Estampas";
             case "parcerias" -> "Parcerias";
             case "outros" -> "Outros";
             default -> code;

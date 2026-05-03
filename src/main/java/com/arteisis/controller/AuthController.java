@@ -4,6 +4,8 @@ import com.arteisis.model.dto.AuthMeResponse;
 import com.arteisis.model.dto.LoginRequest;
 import com.arteisis.model.dto.RegisterRequest;
 import com.arteisis.model.dto.TokenResponse;
+import com.arteisis.model.entity.AppUser;
+import com.arteisis.repository.AppUserRepository;
 import com.arteisis.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +28,7 @@ import org.springframework.web.server.ResponseStatusException;
 public class AuthController {
 
     private final AuthService authService;
+    private final AppUserRepository appUserRepository;
 
     @PostMapping("/login")
     public TokenResponse login(@Valid @RequestBody LoginRequest body) {
@@ -50,6 +53,9 @@ public class AuthController {
                 .findFirst()
                 .map(a -> a.substring("ROLE_".length()))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
-        return new AuthMeResponse(email, role);
+        AppUser user = appUserRepository
+                .findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
+        return new AuthMeResponse(email, role, user.getPhone());
     }
 }

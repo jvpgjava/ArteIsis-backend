@@ -7,7 +7,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
+import java.util.UUID;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -18,6 +20,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class CatalogController {
 
     private final ProductService productService;
+
+    @GetMapping("/{id}")
+    public CatalogProductResponse get(@PathVariable UUID id) {
+        return productService.getCatalog(id);
+    }
 
     @GetMapping
     public List<CatalogProductResponse> list(

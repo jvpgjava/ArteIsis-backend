@@ -2,8 +2,6 @@ package com.arteisis.model.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
@@ -14,29 +12,25 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(name = "app_user")
+@Table(name = "portfolio_item")
 @Getter
 @Setter
-public class AppUser {
+public class PortfolioItem {
 
     @Id
     private UUID id;
 
-    @Column(nullable = false, unique = true)
-    private String email;
+    @Column(nullable = false)
+    private String title;
 
-    @Column(name = "password_hash", nullable = false)
-    private String passwordHash;
+    @Column(name = "image_url", nullable = false, length = 1024)
+    private String imageUrl;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 32)
-    private Role role;
+    @Column(name = "sort_order", nullable = false)
+    private int sortOrder;
 
-    @Column(name = "full_name")
-    private String fullName;
-
-    @Column(length = 32)
-    private String phone;
+    @Column(nullable = false)
+    private boolean active = true;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;

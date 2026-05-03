@@ -45,8 +45,23 @@ public class AuthService {
         user.setRole(Role.CUSTOMER);
         String name = request.fullName() == null ? null : request.fullName().trim();
         user.setFullName(name == null || name.isEmpty() ? null : name);
+        user.setPhone(normalizeOptionalBrazilPhone(request.phone()));
         appUserRepository.save(user);
         return buildTokenResponse(user);
+    }
+
+    private static String normalizeOptionalBrazilPhone(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        String digits = raw.replaceAll("\\D", "");
+        if (digits.isEmpty()) {
+            return null;
+        }
+        if (digits.length() < 10 || digits.length() > 11) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Telefone inválido");
+        }
+        return digits;
     }
 
     private TokenResponse buildTokenResponse(AppUser user) {

@@ -39,6 +39,15 @@ public class ProductService {
     }
 
     @Transactional(readOnly = true)
+    public CatalogProductResponse getCatalog(UUID id) {
+        Product p = productRepository.findById(id).orElseThrow(() -> notFound());
+        if (!p.isActive()) {
+            throw notFound();
+        }
+        return toCatalog(p);
+    }
+
+    @Transactional(readOnly = true)
     public List<CatalogProductResponse> listCatalog(
             String q, Set<String> categories, Set<String> sizes, AvailabilityType availability) {
         boolean useAvailability = availability != null;
