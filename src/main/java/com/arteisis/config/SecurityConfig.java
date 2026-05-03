@@ -55,6 +55,8 @@ public class SecurityConfig {
                         .permitAll()
                         .requestMatchers("/api/catalog/**")
                         .permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/public/contact")
+                        .permitAll()
                         .requestMatchers("/api/admin/**")
                         .hasRole("ADMIN")
                         .requestMatchers("/api/auth/me")
