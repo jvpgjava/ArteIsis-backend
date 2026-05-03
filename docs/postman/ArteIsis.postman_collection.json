@@ -1,0 +1,221 @@
+{
+  "info": {
+    "_postman_id": "a1e2b3c4-d5e6-7890-abcd-arteisis-api",
+    "name": "Arte Isis API",
+    "description": "Snapshot da API. Prefer importar OpenAPI em http://localhost:8080/v3/api-docs (ver docs/POSTMAN.md).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "accessToken", "value": "" },
+    { "key": "customerId", "value": "" },
+    { "key": "productId", "value": "" },
+    { "key": "orderId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login (admin seed)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const j = pm.response.json();",
+                  "  if (j.accessToken) { pm.collectionVariables.set('accessToken', j.accessToken); }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@arteisis.local\",\n  \"password\": \"admin\"\n}"
+            },
+            "url": "{{baseUrl}}/api/auth/login"
+          }
+        },
+        {
+          "name": "Register (customer)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200) {",
+                  "  const j = pm.response.json();",
+                  "  if (j.accessToken) { pm.collectionVariables.set('accessToken', j.accessToken); }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"cliente.postman@example.com\",\n  \"password\": \"Cliente123!\",\n  \"fullName\": \"Cliente Postman\"\n}"
+            },
+            "url": "{{baseUrl}}/api/auth/register"
+          }
+        },
+        {
+          "name": "Me",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/auth/me"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Catalog",
+      "item": [
+        {
+          "name": "List products",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": "{{baseUrl}}/api/catalog/products"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "Customers — list",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/admin/customers"
+          }
+        },
+        {
+          "name": "Customers — create",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const j = pm.response.json();",
+                  "  if (j.id) { pm.collectionVariables.set('customerId', j.id); }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Cliente API\",\n  \"email\": \"cliente.api@example.com\",\n  \"phone\": \"+351911000000\"\n}"
+            },
+            "url": "{{baseUrl}}/api/admin/customers"
+          }
+        },
+        {
+          "name": "Products — list",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/admin/products"
+          }
+        },
+        {
+          "name": "Products — create",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const j = pm.response.json();",
+                  "  if (j.id) { pm.collectionVariables.set('productId', j.id); }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Camiseta API\",\n  \"unitPrice\": 29.90,\n  \"category\": \"Camisetas\",\n  \"stock\": 50,\n  \"imageUrl\": null,\n  \"label\": \"Novo\",\n  \"availability\": \"Disponível\",\n  \"active\": true,\n  \"sizes\": [\"M\", \"L\"]\n}"
+            },
+            "url": "{{baseUrl}}/api/admin/products"
+          }
+        },
+        {
+          "name": "Orders — list",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/admin/orders"
+          }
+        },
+        {
+          "name": "Orders — create",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const j = pm.response.json();",
+                  "  if (j.id) { pm.collectionVariables.set('orderId', j.id); }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": \"{{customerId}}\",\n  \"status\": \"Pendente\",\n  \"orderDate\": \"2026-05-02\",\n  \"lines\": [\n    {\n      \"productId\": null,\n      \"description\": \"Pedido via Postman\",\n      \"quantity\": 1,\n      \"unitPrice\": 29.90\n    }\n  ]\n}"
+            },
+            "url": "{{baseUrl}}/api/admin/orders"
+          }
+        }
+      ]
+    }
+  ]
+}
