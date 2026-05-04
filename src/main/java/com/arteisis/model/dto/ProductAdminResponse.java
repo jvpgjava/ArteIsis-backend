@@ -1,6 +1,7 @@
 package com.arteisis.model.dto;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -14,4 +15,6 @@ public record ProductAdminResponse(
         String label,
         String availability,
         boolean active,
-        Set<String> sizes) {}
+        Set<String> sizes,
+        Set<String> availableSizes,
+        List<ColorVariantDto> colorVariants) {}

@@ -18,7 +18,7 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 public class ImageStorageService {
 
-    private static final long MAX_BYTES = 5 * 1024 * 1024;
+    private static final long MAX_BYTES = 25 * 1024 * 1024;
     private static final Set<String> ALLOWED_EXT = Set.of("jpg", "jpeg", "png", "webp");
 
     private final Path root;
@@ -39,10 +39,10 @@ public class ImageStorageService {
 
     public String storeImage(MultipartFile file) {
         if (file == null || file.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ficheiro em falta");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nenhum arquivo foi enviado.");
         }
         if (file.getSize() > MAX_BYTES) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Imagem demasiado grande (máx. 5 MB)");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Imagem muito grande (máximo de 25 MB).");
         }
         String ext = resolveExtension(file);
         String filename = UUID.randomUUID() + "." + ext;
@@ -53,7 +53,7 @@ public class ImageStorageService {
         try (InputStream in = file.getInputStream()) {
             Files.copy(in, target, StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Não foi possível guardar a imagem");
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Não foi possível salvar a imagem.");
         }
         return "/api/public/media/" + filename;
     }
@@ -78,7 +78,7 @@ public class ImageStorageService {
         String ext = fromCt != null ? fromCt : fromName;
         if (ext == null || !ALLOWED_EXT.contains(ext)) {
             throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "Formato não permitido. Usa JPG, PNG ou WEBP.");
+                    HttpStatus.BAD_REQUEST, "Formato não permitido. Use JPG, PNG ou WebP.");
         }
         return ext;
     }
