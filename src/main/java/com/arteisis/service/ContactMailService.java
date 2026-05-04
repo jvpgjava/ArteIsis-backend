@@ -7,6 +7,7 @@ import java.util.Locale;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.core.env.Environment;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -24,23 +25,25 @@ public class ContactMailService {
     private final ObjectProvider<JavaMailSender> mailSenderProvider;
     private final SpringTemplateEngine templateEngine;
     private final ContactMailProperties mailProperties;
+    private final Environment environment;
 
     public void sendContactEmail(ContactRequest request) {
         JavaMailSender mailSender = mailSenderProvider.getIfAvailable();
         if (mailSender == null) {
             throw new ResponseStatusException(
                     HttpStatus.SERVICE_UNAVAILABLE,
-                    "E-mail não configurado: define spring.mail.host (e credenciais SMTP) no perfil activo.");
+                    "E-mail não configurado: defina spring.mail.host (e credenciais SMTP) no perfil ativo.");
         }
-        String from = mailProperties.from();
-        String to = mailProperties.contactTo();
-        if (from == null || from.isBlank() || to == null || to.isBlank()) {
+        String from = effectiveFromAddress();
+        String to = effectiveContactDestination();
+        if (from.isBlank() || to.isBlank()) {
             throw new ResponseStatusException(
                     HttpStatus.SERVICE_UNAVAILABLE,
-                    "Define arteisis.mail.from e arteisis.mail.contact-to (destino interno dos contactos).");
+                    "Defina arteisis.mail.from e arteisis.mail.contact-to "
+                            + "(ou use spring.mail.username como remetente e destino quando só houver uma caixa interna).");
         }
 
-        String subjectLabel = subjectLabel(request.subject());
+        String resolvedSubjectLabel = subjectLabel(request.subject());
         ClassPathResource logoResource = new ClassPathResource("templates/icons/Logo1-ArteIsis.png");
         boolean hasLogo = logoResource.exists();
 
@@ -48,8 +51,7 @@ public class ContactMailService {
         ctx.setVariable("hasLogo", hasLogo);
         ctx.setVariable("contactName", request.name());
         ctx.setVariable("contactEmail", request.email());
-        ctx.setVariable("subjectCode", request.subject());
-        ctx.setVariable("subjectLabel", subjectLabel);
+        ctx.setVariable("subjectLabel", resolvedSubjectLabel);
         ctx.setVariable("messageBody", request.message());
 
         String html = templateEngine.process("mail/contact-notification", ctx);
@@ -60,7 +62,7 @@ public class ContactMailService {
             helper.setFrom(from);
             helper.setTo(to);
             helper.setReplyTo(request.email());
-            helper.setSubject("[Arte Isis — Site] " + subjectLabel);
+            helper.setSubject("Arte Isis - " + resolvedSubjectLabel);
             helper.setText(html, true);
             if (hasLogo) {
                 helper.addInline("arteisisLogo", logoResource);
@@ -70,8 +72,30 @@ public class ContactMailService {
             mailSender.send(mimeMessage);
         } catch (Exception e) {
             log.error("Falha ao enviar e-mail de contato", e);
-            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Não foi possível enviar o e-mail. Tenta mais tarde.");
+            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Não foi possível enviar o e-mail. Tente mais tarde.");
         }
+    }
+
+    /** Preferência: {@code arteisis.mail.*}; se vazio, usa {@code spring.mail.username} (comum no Gmail). */
+    private String effectiveFromAddress() {
+        String f = mailProperties.from();
+        if (f != null && !f.isBlank()) {
+            return f.trim();
+        }
+        return mailUsernameFallback();
+    }
+
+    private String effectiveContactDestination() {
+        String t = mailProperties.contactTo();
+        if (t != null && !t.isBlank()) {
+            return t.trim();
+        }
+        return mailUsernameFallback();
+    }
+
+    private String mailUsernameFallback() {
+        String u = environment.getProperty("spring.mail.username");
+        return u != null && !u.isBlank() ? u.trim() : "";
     }
 
     private static String subjectLabel(String code) {
