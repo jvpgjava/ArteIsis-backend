@@ -69,7 +69,7 @@ public class ContactMailService {
             }
             mailSender.send(mimeMessage);
         } catch (Exception e) {
-            log.error("Falha ao enviar e-mail de contacto", e);
+            log.error("Falha ao enviar e-mail de contato", e);
             throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Não foi possível enviar o e-mail. Tenta mais tarde.");
         }
     }
