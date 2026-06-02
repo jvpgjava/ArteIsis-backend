@@ -95,6 +95,9 @@ public class ShopOrderService {
                 Product p = productRepository.findById(lr.productId()).orElseThrow(() -> notFound());
                 line.setProduct(p);
             }
+            if (lr.selectedColor() != null && !lr.selectedColor().isBlank()) {
+                line.setSelectedColor(lr.selectedColor().trim());
+            }
             o.addLine(line);
         }
     }
@@ -109,6 +112,11 @@ public class ShopOrderService {
         String summary = o.getLines().stream()
                 .map(OrderLine::getDescription)
                 .collect(Collectors.joining(", "));
+        List<String> colors = o.getLines().stream()
+                .map(OrderLine::getSelectedColor)
+                .filter(c -> c != null && !c.isBlank())
+                .distinct()
+                .toList();
         return new OrderResponse(
                 o.getId(),
                 o.getCustomer().getId(),
@@ -116,7 +124,8 @@ public class ShopOrderService {
                 summary,
                 o.getOrderDate(),
                 o.getStatus().toApi(),
-                o.getTotalAmount());
+                o.getTotalAmount(),
+                colors);
     }
 
     private static OrderStatus parseStatus(String status) {

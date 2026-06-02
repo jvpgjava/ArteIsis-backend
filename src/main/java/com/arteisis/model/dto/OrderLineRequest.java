@@ -12,4 +12,5 @@ public record OrderLineRequest(
         UUID productId,
         @NotBlank @Size(max = 512) String description,
         @NotNull @Min(1) Integer quantity,
-        @NotNull @DecimalMin("0.0") BigDecimal unitPrice) {}
+        @NotNull @DecimalMin("0.0") BigDecimal unitPrice,
+        @Size(max = 32) String selectedColor) {}

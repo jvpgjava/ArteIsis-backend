@@ -42,6 +42,9 @@ public class OrderLine {
     @Column(name = "line_total", nullable = false, precision = 12, scale = 2)
     private BigDecimal lineTotal;
 
+    @Column(name = "selected_color", length = 32)
+    private String selectedColor;
+
     @PrePersist
     void prePersist() {
         if (id == null) {

@@ -2,6 +2,7 @@ package com.arteisis.model.dto;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 public record OrderResponse(
@@ -11,4 +12,5 @@ public record OrderResponse(
         String productSummary,
         LocalDate date,
         String status,
-        BigDecimal total) {}
+        BigDecimal total,
+        List<String> colors) {}

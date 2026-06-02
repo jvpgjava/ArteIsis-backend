@@ -4,8 +4,10 @@ import com.arteisis.model.dto.LoginRequest;
 import com.arteisis.model.dto.RegisterRequest;
 import com.arteisis.model.dto.TokenResponse;
 import com.arteisis.model.entity.AppUser;
+import com.arteisis.model.entity.Customer;
 import com.arteisis.model.entity.Role;
 import com.arteisis.repository.AppUserRepository;
+import com.arteisis.repository.CustomerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -18,6 +20,7 @@ import org.springframework.web.server.ResponseStatusException;
 public class AuthService {
 
     private final AppUserRepository appUserRepository;
+    private final CustomerRepository customerRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
 
@@ -45,8 +48,27 @@ public class AuthService {
         user.setRole(Role.CUSTOMER);
         String name = request.fullName() == null ? null : request.fullName().trim();
         user.setFullName(name == null || name.isEmpty() ? null : name);
-        user.setPhone(normalizeOptionalBrazilPhone(request.phone()));
+        String phone = normalizeOptionalBrazilPhone(request.phone());
+        user.setPhone(phone);
         appUserRepository.save(user);
+
+        // Garante que o cliente apareça na aba de clientes do admin
+        String customerName = (user.getFullName() != null) ? user.getFullName() : email;
+        String customerPhone = (phone != null) ? phone : "";
+        customerRepository.findByEmailIgnoreCase(email).ifPresentOrElse(
+                c -> {
+                    c.setName(customerName);
+                    if (phone != null) c.setPhone(phone);
+                    customerRepository.save(c);
+                },
+                () -> {
+                    Customer c = new Customer();
+                    c.setName(customerName);
+                    c.setEmail(email);
+                    c.setPhone(customerPhone);
+                    customerRepository.save(c);
+                });
+
         return buildTokenResponse(user);
     }
 

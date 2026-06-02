@@ -55,7 +55,7 @@ public class SecurityConfig {
                         .permitAll()
                         .requestMatchers("/api/catalog/**")
                         .permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/public/contact")
+                        .requestMatchers(HttpMethod.POST, "/api/public/contact", "/api/public/orders")
                         .permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/public/media/**")
                         .permitAll()
