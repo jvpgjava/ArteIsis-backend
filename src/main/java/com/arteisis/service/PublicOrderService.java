@@ -7,8 +7,10 @@ import com.arteisis.model.entity.Customer;
 import com.arteisis.repository.CustomerRepository;
 import java.time.LocalDate;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
@@ -18,21 +20,11 @@ public class PublicOrderService {
     private final ShopOrderService shopOrderService;
 
     @Transactional
-    public OrderResponse createOrder(PublicOrderRequest request) {
+    public OrderResponse createOrder(PublicOrderRequest request, String email) {
         Customer customer = customerRepository
-                .findByEmailIgnoreCase(request.customerEmail())
-                .map(c -> {
-                    c.setName(request.customerName());
-                    c.setPhone(request.customerPhone());
-                    return customerRepository.save(c);
-                })
-                .orElseGet(() -> {
-                    Customer c = new Customer();
-                    c.setName(request.customerName());
-                    c.setEmail(request.customerEmail().toLowerCase());
-                    c.setPhone(request.customerPhone());
-                    return customerRepository.save(c);
-                });
+                .findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.UNPROCESSABLE_ENTITY, "Cadastro de cliente não encontrado para este e-mail."));
 
         OrderWriteRequest orderRequest = new OrderWriteRequest(
                 customer.getId(),

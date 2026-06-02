@@ -6,6 +6,7 @@ import com.arteisis.service.PublicOrderService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,7 +22,7 @@ public class PublicOrderController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public OrderResponse create(@RequestBody @Valid PublicOrderRequest request) {
-        return publicOrderService.createOrder(request);
+    public OrderResponse create(@RequestBody @Valid PublicOrderRequest request, Authentication authentication) {
+        return publicOrderService.createOrder(request, authentication.getName());
     }
 }
