@@ -8,6 +8,7 @@ import jakarta.validation.constraints.Size;
 public record ContactRequest(
         @NotBlank @Size(max = 255) String name,
         @NotBlank @Email @Size(max = 255) String email,
+        @Size(max = 64) String phone,
         @NotBlank
                 @Pattern(
                         regexp = "uniformes|camisetas|estampas|parcerias|outros",
