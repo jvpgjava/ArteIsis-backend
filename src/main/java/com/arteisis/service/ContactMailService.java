@@ -51,6 +51,7 @@ public class ContactMailService {
         ctx.setVariable("hasLogo", hasLogo);
         ctx.setVariable("contactName", request.name());
         ctx.setVariable("contactEmail", request.email());
+        ctx.setVariable("contactPhone", request.phone());
         ctx.setVariable("subjectLabel", resolvedSubjectLabel);
         ctx.setVariable("messageBody", request.message());
 

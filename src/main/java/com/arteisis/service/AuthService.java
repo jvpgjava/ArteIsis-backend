@@ -23,6 +23,7 @@ public class AuthService {
     private final CustomerRepository customerRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final NotificationMailService notificationMailService;
 
     @Transactional(readOnly = true)
     public TokenResponse login(LoginRequest request) {
@@ -69,6 +70,7 @@ public class AuthService {
                     customerRepository.save(c);
                 });
 
+        notificationMailService.sendWelcome(email, user.getFullName());
         return buildTokenResponse(user);
     }
 

@@ -34,6 +34,10 @@
                     <a th:href="|mailto:${contactEmail}|" th:text="${contactEmail}" style="color:#3b6b8a;text-decoration:none;font-weight:600;">—</a>
                   </td>
                 </tr>
+                <tr th:if="${contactPhone != null and !#strings.isEmpty(contactPhone)}">
+                  <td style="padding:14px 16px;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:13px;vertical-align:top;">Telefone</td>
+                  <td style="padding:14px 16px;border-bottom:1px solid #f1f5f9;font-size:14px;font-weight:600;color:#1e293b;" th:text="${contactPhone}">—</td>
+                </tr>
                 <tr>
                   <td style="padding:14px 16px;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:13px;vertical-align:top;">Assunto</td>
                   <td style="padding:14px 16px;border-bottom:1px solid #f1f5f9;font-size:14px;font-weight:600;color:#1e293b;" th:text="${subjectLabel}">—</td>

@@ -30,6 +30,7 @@ public class ShopOrderService {
     private final ShopOrderRepository shopOrderRepository;
     private final CustomerRepository customerRepository;
     private final ProductRepository productRepository;
+    private final NotificationMailService notificationMailService;
 
     @Transactional(readOnly = true)
     public List<OrderResponse> list(String q, String status, LocalDate date) {
@@ -65,14 +66,20 @@ public class ShopOrderService {
     @Transactional
     public OrderResponse update(UUID id, OrderWriteRequest request) {
         ShopOrder o = shopOrderRepository.findById(id).orElseThrow(() -> notFound());
+        OrderStatus previousStatus = o.getStatus();
         Customer c = customerRepository.findById(request.customerId()).orElseThrow(() -> notFound());
         o.setCustomer(c);
-        o.setStatus(parseStatus(request.status()));
+        OrderStatus newStatus = parseStatus(request.status());
+        o.setStatus(newStatus);
         o.setOrderDate(request.orderDate());
         o.clearLines();
         applyLines(o, request.lines());
         o.setTotalAmount(sumLines(o));
-        return toResponse(shopOrderRepository.save(o));
+        OrderResponse response = toResponse(shopOrderRepository.save(o));
+        if (previousStatus != newStatus) {
+            notificationMailService.sendOrderStatusUpdate(c.getEmail(), c.getName(), response);
+        }
+        return response;
     }
 
     @Transactional

@@ -18,6 +18,7 @@ public class PublicOrderService {
 
     private final CustomerRepository customerRepository;
     private final ShopOrderService shopOrderService;
+    private final NotificationMailService notificationMailService;
 
     @Transactional
     public OrderResponse createOrder(PublicOrderRequest request, String email) {
@@ -32,6 +33,8 @@ public class PublicOrderService {
                 LocalDate.now(),
                 request.lines());
 
-        return shopOrderService.create(orderRequest);
+        OrderResponse response = shopOrderService.create(orderRequest);
+        notificationMailService.sendOrderConfirmation(customer.getEmail(), customer.getName(), response);
+        return response;
     }
 }
