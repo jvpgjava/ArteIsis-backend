@@ -1,0 +1,54 @@
+// Pipeline Jenkins — backend ArteIsis
+// Crie um job "Pipeline script from SCM" apontando para este ficheiro (ou cole no Jenkins).
+// Parâmetro ENV: prod | hml
+
+pipeline {
+    agent any
+
+    parameters {
+        choice(name: 'ENV', choices: ['hml', 'prod'], description: 'Ambiente de deploy')
+    }
+
+    environment {
+        SSH_HOST = '72.61.47.148'
+        SSH_USER = 'jgrando'
+        DEPLOY_DIR = "${params.ENV == 'prod' ? '/var/www/arteisis/prod/backend' : '/var/www/arteisis/hml/backend'}"
+        SYSTEMD_UNIT = "${params.ENV == 'prod' ? 'arteisis-prod' : 'arteisis-hml'}"
+        SPRING_PROFILE = "${params.ENV == 'prod' ? 'prod' : 'hml'}"
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Build JAR') {
+            steps {
+                sh 'mvn -B clean package -DskipTests'
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                sh """
+                    JAR=\$(ls target/*.jar | head -1)
+                    scp -o StrictHostKeyChecking=accept-new "\$JAR" ${SSH_USER}@${SSH_HOST}:${DEPLOY_DIR}/arteisis.jar
+                    ssh ${SSH_USER}@${SSH_HOST} "sudo systemctl restart ${SYSTEMD_UNIT}"
+                """
+            }
+        }
+
+        stage('Health') {
+            steps {
+                script {
+                    def url = params.ENV == 'prod'
+                        ? 'https://api-arteisis.jgnx.com.br/api/catalog/products'
+                        : 'https://api-hml-arteisis.jgnx.com.br/api/catalog/products'
+                    sh "curl -fsS '${url}' || true"
+                }
+            }
+        }
+    }
+}

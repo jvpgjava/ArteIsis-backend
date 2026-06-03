@@ -1,4 +1,7 @@
 # Copia para application-local.properties (não versionado) e ajusta valores.
+# Perfil local: porta 4040 (dev=4041, prod=4042, hml=4043).
+
+server.port=4040
 
 spring.datasource.url=jdbc:postgresql://localhost:5432/arteisis
 spring.datasource.username=postgres
