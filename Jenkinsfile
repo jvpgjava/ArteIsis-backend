@@ -1,50 +1,106 @@
-// ArteIsis backend — branch master → prod | branch hml → homologação
+// ArteIsis backend — mesmo padrão Flowtix: deploy local na VPS (sem scp/ssh)
+// Branch master → prod | branch hml → homologação
 // Repo: https://github.com/jvpgjava/ArteIsis-backend.git
-
-def deployEnv = (env.BRANCH_NAME == 'hml') ? 'hml' : 'prod'
-def deployDir = deployEnv == 'prod' ? '/var/www/arteisis/prod/backend' : '/var/www/arteisis/hml/backend'
-def systemdUnit = deployEnv == 'prod' ? 'arteisis-prod' : 'arteisis-hml'
-def healthUrl = deployEnv == 'prod'
-    ? 'https://api-arteisis.jgnx.com.br/api/catalog/products'
-    : 'https://api-hml-arteisis.jgnx.com.br/api/catalog/products'
 
 pipeline {
     agent any
 
     environment {
-        SSH_HOST = '72.61.47.148'
-        SSH_USER = 'jgrando'
+        DEPLOY_USER = 'jgrando'
+        JAR_NAME    = 'arte-isis-api-0.0.1-SNAPSHOT.jar'
+    }
+
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '10'))
+        timeout(time: 15, unit: 'MINUTES')
+        disableConcurrentBuilds()
     }
 
     stages {
+        stage('Set Environment') {
+            steps {
+                script {
+                    def branchName = env.BRANCH_NAME ?: env.GIT_BRANCH?.replaceAll('origin/', '') ?: ''
+                    if (branchName == 'master') {
+                        env.PROFILE      = 'prod'
+                        env.DEPLOY_DIR   = '/var/www/arteisis/prod/backend'
+                        env.SERVICE_NAME = 'arteisis-prod'
+                        env.ENV_LABEL    = 'PRODUÇÃO'
+                    } else if (branchName == 'hml') {
+                        env.PROFILE      = 'hml'
+                        env.DEPLOY_DIR   = '/var/www/arteisis/hml/backend'
+                        env.SERVICE_NAME = 'arteisis-hml'
+                        env.ENV_LABEL    = 'HOMOLOG'
+                    } else {
+                        env.PROFILE   = ''
+                        env.ENV_LABEL = 'N/A'
+                    }
+                }
+                echo "Branch: ${env.BRANCH_NAME} → Ambiente: ${env.ENV_LABEL}"
+            }
+        }
+
         stage('Checkout') {
             steps {
                 checkout scm
             }
         }
 
-        stage('Build JAR') {
+        stage('Build') {
             steps {
-                echo "Branch: ${env.BRANCH_NAME} → ambiente: ${deployEnv}"
-                sh 'mvn -B clean package -DskipTests'
+                sh 'mvn clean package -DskipTests -B'
             }
         }
 
         stage('Deploy') {
+            when {
+                expression { env.PROFILE != '' }
+            }
             steps {
-                sh """
-                    JAR=\$(ls target/arte-isis-api-*.jar | grep -v '.original' | head -1)
-                    test -n "\$JAR" || { echo 'JAR não encontrado em target/'; exit 1; }
-                    scp -o StrictHostKeyChecking=accept-new "\$JAR" ${SSH_USER}@${SSH_HOST}:${deployDir}/arteisis.jar
-                    ssh -o StrictHostKeyChecking=accept-new ${SSH_USER}@${SSH_HOST} "sudo systemctl restart ${systemdUnit}"
-                """
+                script {
+                    def jarPath = "target/${env.JAR_NAME}"
+                    if (!fileExists(jarPath)) {
+                        error "JAR não encontrado: ${jarPath}"
+                    }
+                    sh """
+                        sudo mkdir -p ${env.DEPLOY_DIR}
+                        sudo cp ${jarPath} ${env.DEPLOY_DIR}/arteisis.jar
+                        sudo chown ${DEPLOY_USER}:${DEPLOY_USER} ${env.DEPLOY_DIR}/arteisis.jar
+                        sudo systemctl restart ${env.SERVICE_NAME}
+                    """
+                }
             }
         }
 
-        stage('Health') {
-            steps {
-                sh "curl -fsS '${healthUrl}' || true"
+        stage('Health Check') {
+            when {
+                expression { env.PROFILE != '' }
             }
+            steps {
+                script {
+                    sleep 10
+                    def status = sh(
+                        script: "sudo systemctl is-active ${env.SERVICE_NAME}",
+                        returnStdout: true
+                    ).trim()
+                    if (status != 'active') {
+                        error "Service ${env.SERVICE_NAME} não está ativo: ${status}"
+                    }
+                }
+                echo "Service ${env.SERVICE_NAME} is active."
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "ArteIsis backend [${env.ENV_LABEL}] concluído com sucesso."
+        }
+        failure {
+            echo "ArteIsis backend [${env.ENV_LABEL}] falhou. Verifique os logs."
+        }
+        always {
+            cleanWs(deleteDirs: true, notFailBuild: true)
         }
     }
 }
