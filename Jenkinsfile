@@ -1,12 +1,16 @@
-// ArteIsis backend — mesmo padrão Flowtix: deploy local na VPS (sem scp/ssh)
-// Branch master → prod | branch hml → homologação
+// ArteIsis backend — Jenkins na mesma VPS (como Flowtix)
+// master → prod (arteisis-prod) | hml → homolog (arteisis-hml)
 // Repo: https://github.com/jvpgjava/ArteIsis-backend.git
+// Setup VPS: docs/deploy/setup-jenkins-vps.sh
 
 pipeline {
     agent any
 
     environment {
         DEPLOY_USER = 'jgrando'
+        DEPLOY_HOST = '127.0.0.1'
+        SSH_KEY     = '/opt/jenkins-home/.ssh/id_ed25519_deploy'
+        SSH_OPTS    = '-o StrictHostKeyChecking=accept-new -o IdentitiesOnly=yes'
         JAR_NAME    = 'arte-isis-api-0.0.1-SNAPSHOT.jar'
     }
 
@@ -21,6 +25,7 @@ pipeline {
             steps {
                 script {
                     def branchName = env.BRANCH_NAME ?: env.GIT_BRANCH?.replaceAll('origin/', '') ?: ''
+                    env.BRANCH_LABEL = branchName ?: 'desconhecida'
                     if (branchName == 'master') {
                         env.PROFILE      = 'prod'
                         env.DEPLOY_DIR   = '/var/www/arteisis/prod/backend'
@@ -36,7 +41,7 @@ pipeline {
                         env.ENV_LABEL = 'N/A'
                     }
                 }
-                echo "Branch: ${env.BRANCH_NAME} → Ambiente: ${env.ENV_LABEL}"
+                echo "Branch: ${env.BRANCH_LABEL} (GIT_BRANCH=${env.GIT_BRANCH}) → ${env.ENV_LABEL}"
             }
         }
 
@@ -63,10 +68,11 @@ pipeline {
                         error "JAR não encontrado: ${jarPath}"
                     }
                     sh """
-                        sudo mkdir -p ${env.DEPLOY_DIR}
-                        sudo cp ${jarPath} ${env.DEPLOY_DIR}/arteisis.jar
-                        sudo chown ${DEPLOY_USER}:${DEPLOY_USER} ${env.DEPLOY_DIR}/arteisis.jar
-                        sudo systemctl restart ${env.SERVICE_NAME}
+                        set -e
+                        mkdir -p ${env.DEPLOY_DIR}
+                        cp ${jarPath} ${env.DEPLOY_DIR}/arteisis.jar
+                        ssh -i ${SSH_KEY} ${SSH_OPTS} ${DEPLOY_USER}@${DEPLOY_HOST} \\
+                            "sudo systemctl restart ${env.SERVICE_NAME}"
                     """
                 }
             }
@@ -80,7 +86,10 @@ pipeline {
                 script {
                     sleep 10
                     def status = sh(
-                        script: "sudo systemctl is-active ${env.SERVICE_NAME}",
+                        script: """
+                            ssh -i ${SSH_KEY} ${SSH_OPTS} ${DEPLOY_USER}@${DEPLOY_HOST} \\
+                                "sudo systemctl is-active ${env.SERVICE_NAME}"
+                        """,
                         returnStdout: true
                     ).trim()
                     if (status != 'active') {
