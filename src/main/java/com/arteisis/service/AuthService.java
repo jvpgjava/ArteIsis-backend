@@ -41,7 +41,7 @@ public class AuthService {
     public TokenResponse register(RegisterRequest request) {
         String email = request.email().trim().toLowerCase();
         if (appUserRepository.existsByEmailIgnoreCase(email)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "E-mail já registado");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "E-mail já registrado");
         }
         AppUser user = new AppUser();
         user.setEmail(email);
